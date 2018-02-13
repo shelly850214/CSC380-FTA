@@ -21,6 +21,7 @@ public class GroceryList {
 	 */
 	public void manualAdd(Food f) {
 		list.add(f);
+		compareList.put(f.getName(), f);
 	}
 	
 	/**
@@ -30,6 +31,7 @@ public class GroceryList {
 	public void autoAdd(ArrayList<Food> foods) {
 		for(Food f : foods) {
 			list.add(f);
+			compareList.put(f.getName(), f);
 		}
 	}
 	
