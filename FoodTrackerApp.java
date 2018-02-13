@@ -166,9 +166,11 @@ public class FoodTrackerApp {
 		switch (m) {
 			case FREEZER:{
 				System.out.println("freezer.");
+				break;
 			}
 			case PANTRY:{
 				System.out.println("pantry.");
+				break;
 			}
 			default:{
 				System.out.println("fridge.");
