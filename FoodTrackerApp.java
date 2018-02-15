@@ -3,26 +3,36 @@ import java.util.Scanner;
 
 public class FoodTrackerApp {
 	
+	final static int millisecondsInDay = 86400000;
+	static int warningTime = 3;
+	static int grocGenerate = 7;
+	static Mode m = Mode.FRIDGE;
+	static long prevTime;
+	
 	public static void main(String[] args) {
 		
 		//TODO read up on file objects.
 		File memory = null;
 		//TODO build parser and parse file to build info
 		//TODO change prevTime to parsed info
-		long prevTime = System.currentTimeMillis();
+		prevTime = 0;
 		GroceryList list = new GroceryList();
 		//TODO rename class as needed
 		Storage food = null;
-		Mode m = Mode.FRIDGE;
-		int warningTime = 3;
-		int grocGenerate = 7;
 		//TODO make command list
 		String commandList = ""
-				+ "help: displays a list of commands"
-				+ "setup: returns to the setup"
-				+ "exit: saves data and exits the program"
-				+ "quit: saves data and quits the program"
-				+ "mode: returns to mode setup (fridge, freezer, pantry)";
+				+ "Type any of these commands and press enter when ready.\n"
+				+ "exit: saves data and exits the program.\n"
+				+ "find: asks for a food to search for.\n"
+				+ "h: displays a list of commands.\n"
+				+ "help: displays a list of commands.\n"
+				+ "look: asks for a food to search for.\n"
+				+ "mode: returns to mode setup (fridge, freezer, pantry).\n"
+				+ "quit: saves data and quits the program.\n"
+				+ "search: asks for a food to search for.\n"
+				+ "setup: returns to the setup.\n"
+				+ "warnings: prints the information on the foods about to"
+				+ "\nexpire, if any, as well as the grocery list, if ready.\n";
 		
 		boolean running = true;
 		boolean setup = true;
@@ -35,24 +45,9 @@ public class FoodTrackerApp {
 			
 			//prints out foods about to expire as long as there are foods
 			//prints out the grocery list as long as there are foods
-			//TODO make this a method call
-			if(food!=null||setup==false) {
-				System.out.println();
-				System.out.println("Caution; these foods are close to "
-						+ "expiring: ");
-				FoodTrackerApp.printCloseToExpiring(food, 
+			if(!setup) {
+				FoodTrackerApp.printUpdates(food, list, 
 						System.currentTimeMillis());
-				if(System.currentTimeMillis()-prevTime>=7) {
-					//TODO change value 7 in if statement to the time 
-					//provided in the setup, grocGenerate.
-					System.out.println();
-					System.out.println("It's time to go shopping. Here is "
-							+ "your grocery list:\n");
-					list.checkInventory(food.getFreezer());
-					list.checkInventory(food.getFridge());
-					list.checkInventory(food.getPantry());
-					System.out.println(list);
-				}
 			}
 			//otherwise perform first time setup.
 			else {
@@ -100,6 +95,9 @@ public class FoodTrackerApp {
 				//TODO add more setup as needed.
 				System.out.println("Alright, that looks like everything for"
 						+ " now. Remember to change these setting as needed.");
+				System.out.println("If at any point you need information about"
+						+ "what commands you can use,\ntype 'help' or 'h' and "
+						+ "press enter.");
 				setup = false;
 			}
 			
@@ -130,31 +128,21 @@ public class FoodTrackerApp {
 				//Secondary loop where input commands are given.
 				/*
 				 * Command list:
+				 * help/h: prints command list
+				 * quit: quits the program, you quitter...
 				 * exit: saves data and exits program
 				 * up: returns to storage selection
+				 * mode: prints the current storage location
 				 * find/look/search: searches for food in current location
 				 * setup: runs the setup
+				 * warnings: calls the functions that print food about to 
+				 * 	expire and the grocery list
 				 * 
 				 */
-				//TODO make this a method call
-				System.out.println();
-				System.out.println("Caution; these foods are close to "
-						+ "expiring: ");
-				FoodTrackerApp.printCloseToExpiring(food, 
+				FoodTrackerApp.printUpdates(food, list, 
 						System.currentTimeMillis());
-				if(System.currentTimeMillis()-prevTime>=7) {
-					//TODO change value 7 in if statement to the time 
-					//provided in the setup, grocGenerate.
-					System.out.println();
-					System.out.println("It's time to go shopping. Here is "
-							+ "your grocery list:\n");
-					list.checkInventory(food.getFreezer());
-					list.checkInventory(food.getFridge());
-					list.checkInventory(food.getPantry());
-					System.out.println(list);
-				}
 				while(running) {
-					
+					//TODO put the switch case block here for commands given
 				}
 			}
 		}
@@ -173,9 +161,69 @@ public class FoodTrackerApp {
 		//TODO use parser to write to file
 	}
 	
-	public static void printCloseToExpiring(Storage s, long t) {
-		String value = "No foods are close to expiring.";
-		//TODO set value to "" if food is located
+	/**
+	 * This method prints out the foods about to expire as well as the 
+	 * grocery list (as long as the list is due by time).
+	 * @param s
+	 * @param l
+	 * @param t
+	 */
+	public static void printUpdates(Storage s, GroceryList l, long t) {
+		System.out.println();
+		System.out.println("Caution; these foods are close to "
+				+ "expiring: ");
+		FoodTrackerApp.printCloseToExpiring(s);
+		FoodTrackerApp.printGroceryList(s, l);
+	}
+	
+	/**
+	 * Will print the grocery list if the list is due to be generated.
+	 * @param s
+	 * @param l
+	 */
+	private static void printGroceryList(Storage s, GroceryList l) {
+		if(((System.currentTimeMillis()/1000)-(prevTime/1000))>=
+				grocGenerate*millisecondsInDay/1000) {
+			String printVal = "It's time to go shopping. Here is "
+					+ "your grocery list:\n";
+			System.out.println();
+			l.checkInventory(s.getFreezer());
+			l.checkInventory(s.getFridge());
+			l.checkInventory(s.getPantry());
+			if(l.toString().equals("")) {
+				System.out.println("There's nothing on your shopping list.\n");
+			}
+			else System.out.println(printVal+l);
+			System.out.println();
+		}
+	}
+	
+	/**
+	 * This checks to see what foods are close to expiring and prints those
+	 * whose expiration date will show up in the next "t" days.
+	 * @param s
+	 * @param t
+	 */
+	private static void printCloseToExpiring(Storage s) {
+		String value = "Foods about to expire:\n";
+		for(Food foods : s.getFridge()) {
+			if(foods.aboutToExpire(warningTime)){
+				value+=foods.getName()+"\n";
+			}
+		}
+		for(Food foods : s.getFreezer()) {
+			if(foods.aboutToExpire(warningTime)){
+				value+=foods.getName()+"\n";
+			}
+		}
+		for(Food foods : s.getPantry()) {
+			if(foods.aboutToExpire(warningTime)){
+				value+=foods.getName()+"\n";
+			}
+		}
+		if(value.equals("Foods about to expire:\n")) {
+			value = "No foods are close to expiring.";
+		}
 		System.out.println(value);
 	}
 	
